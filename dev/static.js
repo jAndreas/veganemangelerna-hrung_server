@@ -1,9 +1,10 @@
 'use strict';
 
 const	PuppeTeer	= require( 'puppeteer' ),
-		fs			= require( 'fs' );
+		fs			= require( 'fs' ),
+		path		= require( 'path' );
 
-const	{ extend, log }		= require( './toolkit.js' );
+const	{ extend, log, readFile, writeFile }		= require( './toolkit.js' );
 
 let Static = target => class extends target {
 	constructor( input = { } ) {
@@ -21,9 +22,7 @@ let Static = target => class extends target {
 		await this.unlinkAllStaticContent();
 		await this.createStaticIndexPage();
 		console.log( `\n-----\nDone! Launching Server...\n` );*/
-		log( 'Generating index.html...', 'purple' );
 		await this.createIndexPage();
-		log( 'Done.', 'purple' );
 	}
 
 	async unlinkAllStaticContent() {
@@ -46,10 +45,11 @@ let Static = target => class extends target {
 				build:			Date.now()
 			});
 
+			log( 'Generating index.html...', 'purple' );
 			await writeFile( indexTarget, bpContent );
-			console.log( `${ indexTarget } was updated successfully.` );
+			log( 'Done.', 'purple' );
 		} catch( ex ) {
-
+			log( `createIndexPage(): ${ ex.message }`, 'red' );
 		}
 	}
 

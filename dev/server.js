@@ -6,6 +6,7 @@ const	ClientConnection	= require( './clientconnection' ),
 		DDoSControl			= require( './ddoscontrol.js' ),
 		Crypto				= require( './crypto.js' ),
 		Static				= require( './static.js' ),
+		PayPal				= require( './paypal.js' ),
 		stripHTML			= require( 'sanitize-html' ),
 		path				= require( 'path' );
 
@@ -15,7 +16,7 @@ const	{ Seconds, Minutes, Hours, timeout, extend, Composition, readFile, writeFi
 const	DEVMODE	= process.argv[ 2 ] === 'dev';
 
 
-class Server extends Composition( CouchConnection, MailService, ClientConnection, DDoSControl, Crypto, Static ) {
+class Server extends Composition( CouchConnection, MailService, ClientConnection, DDoSControl, PayPal, Crypto, Static ) {
 	constructor( input = { } ) {
 		super( ...arguments );
 
@@ -49,13 +50,19 @@ class Server extends Composition( CouchConnection, MailService, ClientConnection
 	newConnection( client ) {
 		client.clientIPAddress		= client.request.headers[ 'x-forwarded-for' ] || client.conn.transport.socket._socket.remoteAddress;
 
+		log( `New Client Connection from: ${ client.clientIPAddress }`, 'yellow' );
+
 		client.on( 'disconnect', this.closeConnection.bind( this, client ) );
+
+		super.newConnection && super.newConnection( ...arguments );
 	}
 
 	async closeConnection( client, reason ) {
 		log( `Closed connection from: ${ client.clientIPAddress } (${ client.id }), reason: ${ reason }`, 'red' );
 
 		client = null;
+
+		super.closeConnection && super.closeConnection( ...arguments );
 	}
 
 	async adminNotification( subject = `admin notification [${ this.uri }]`, content = '' ) {
@@ -111,8 +118,8 @@ class Server extends Composition( CouchConnection, MailService, ClientConnection
 
 if( DEVMODE ) {
 	log( 'DEV MODE SERVER', 'yellow' );
-	new Server({ name: 'VEGANEMANGELERNÄHRUNG (DEV)', port: 3240 });
+	new Server({ name: 'VEGANEMANGELERNÄHRUNG (DEV)', port: 2252 });
 } else {
 	log( 'PROD MODE SERVER, WE ARE LIVE BOYS', 'red' );
-	new Server({ name: 'VEGANEMANGELERNÄHRUNG', port: 3239 });
+	new Server({ name: 'VEGANEMANGELERNÄHRUNG', port: 2250 });
 }

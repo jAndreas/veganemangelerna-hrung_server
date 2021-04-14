@@ -23,13 +23,11 @@ let DDoSControl = target => class extends target {
 
 	async init() {
 		super.init && await super.init( ...arguments );
-
-		this.socket.on( 'connection', this.newConnection.bind( this ) );
 	}
 
 	newConnection( client ) {
-		client.clientIPAddress		= client.request.headers[ 'x-forwarded-for' ] || client.conn.transport.socket._socket.remoteAddress;
-
+		super.newConnection && super.newConnection( ...arguments );
+		
 		if( /bot|google|bing|msn|duckduckbot|slurp|headlesschrome/i.test( client.handshake.headers[ 'user-agent' ] ) === false ) {
 			if( typeof clientPackageData[ client.id ] === 'undefined' ) {
 				clientPackageData[ client.id ] = [ ];
@@ -39,7 +37,6 @@ let DDoSControl = target => class extends target {
 		}
 
 		client.use( this.checkIncomingPackage.bind( this, client ) );
-		client.on( 'disconnect', this.closeConnection.bind( this, client ) );
 	}
 
 	async closeConnection( client, reason ) {
